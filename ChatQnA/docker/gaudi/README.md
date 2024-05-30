@@ -25,25 +25,19 @@ docker build --no-cache -t opea/embedding-tei:latest --build-arg https_proxy=$ht
 docker build --no-cache -t opea/retriever-redis:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f comps/retrievers/langchain/docker/Dockerfile .
 ```
 
-### 4. Build Rerank Image
-
-```bash
-docker build --no-cache -t opea/reranking-tei:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f comps/reranks/langchain/docker/Dockerfile .
-```
-
-### 5. Build LLM Image
+### 4. Build LLM Image
 
 ```bash
 docker build --no-cache -t opea/llm-tgi:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f comps/llms/text-generation/tgi/Dockerfile .
 ```
 
-### 6. Build Dataprep Image
+### 5. Build Dataprep Image
 
 ```bash
 docker build --no-cache -t opea/dataprep-redis:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f comps/dataprep/redis/docker/Dockerfile .
 ```
 
-### 7. Build TEI Gaudi Image
+### 6. Build TEI Gaudi Image
 
 Since a TEI Gaudi Docker image hasn't been published, we'll need to build it from the [tei-guadi](https://github.com/huggingface/tei-gaudi) repository.
 
@@ -53,7 +47,7 @@ cd tei-gaudi/
 docker build --no-cache -f Dockerfile-hpu -t opea/tei-gaudi:latest .
 ```
 
-### 8. Build MegaService Docker Image
+### 7. Build MegaService Docker Image
 
 To construct the Mega Service, we utilize the [GenAIComps](https://github.com/opea-project/GenAIComps.git) microservice pipeline within the `chatqna.py` Python script. Build the MegaService Docker image using the command below:
 
@@ -63,7 +57,7 @@ cd GenAIExamples/ChatQnA/docker
 docker build --no-cache -t opea/chatqna:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy -f Dockerfile .
 ```
 
-### 9. Build UI Docker Image
+### 8. Build UI Docker Image
 
 Construct the frontend Docker image using the command below:
 
@@ -76,12 +70,11 @@ Then run the command `docker images`, you will have the following 8 Docker Image
 
 1. `opea/embedding-tei:latest`
 2. `opea/retriever-redis:latest`
-3. `opea/reranking-tei:latest`
-4. `opea/llm-tgi:latest`
-5. `opea/tei-gaudi:latest`
-6. `opea/dataprep-redis:latest`
-7. `opea/chatqna:latest`
-8. `opea/chatqna-ui:latest`
+3. `opea/llm-tgi:latest`
+4. `opea/tei-gaudi:latest`
+5. `opea/dataprep-redis:latest`
+6. `opea/chatqna:latest`
+7. `opea/chatqna-ui:latest`
 
 ## 🚀 Start MicroServices and MegaService
 
@@ -93,10 +86,8 @@ Since the `docker_compose.yaml` will consume some environment variables, you nee
 export http_proxy=${your_http_proxy}
 export https_proxy=${your_http_proxy}
 export EMBEDDING_MODEL_ID="BAAI/bge-base-en-v1.5"
-export RERANK_MODEL_ID="BAAI/bge-reranker-base"
 export LLM_MODEL_ID="Intel/neural-chat-7b-v3-3"
 export TEI_EMBEDDING_ENDPOINT="http://${host_ip}:8090"
-export TEI_RERANKING_ENDPOINT="http://${host_ip}:8808"
 export TGI_LLM_ENDPOINT="http://${host_ip}:8008"
 export REDIS_URL="redis://${host_ip}:6379"
 export INDEX_NAME="rag-redis"
@@ -104,7 +95,6 @@ export HF_TOKEN=${your_hf_api_token}
 export MEGA_SERVICE_HOST_IP=${host_ip}
 export EMBEDDING_SERVICE_HOST_IP=${host_ip}
 export RETRIEVER_SERVICE_HOST_IP=${host_ip}
-export RERANK_SERVICE_HOST_IP=${host_ip}
 export LLM_SERVICE_HOST_IP=${host_ip}
 export BACKEND_SERVICE_ENDPOINT="http://${host_ip}:8888/v1/chatqna"
 export DATAPREP_SERVICE_ENDPOINT="http://${host_ip}:6007/v1/dataprep"
@@ -159,25 +149,7 @@ curl http://${host_ip}:7000/v1/retrieval \
   -H 'Content-Type: application/json'
 ```
 
-4. TEI Reranking Service
-
-```bash
-curl http://${host_ip}:8808/rerank \
-    -X POST \
-    -d '{"query":"What is Deep Learning?", "texts": ["Deep Learning is not...", "Deep learning is..."]}' \
-    -H 'Content-Type: application/json'
-```
-
-5. Reranking Microservice
-
-```bash
-curl http://${host_ip}:8000/v1/reranking \
-  -X POST \
-  -d '{"initial_query":"What is Deep Learning?", "retrieved_docs": [{"text":"Deep Learning is not..."}, {"text":"Deep learning is..."}]}' \
-  -H 'Content-Type: application/json'
-```
-
-6. TGI Service
+4. TGI Service
 
 ```bash
 curl http://${host_ip}:8008/generate \
@@ -186,7 +158,7 @@ curl http://${host_ip}:8008/generate \
   -H 'Content-Type: application/json'
 ```
 
-7. LLM Microservice
+5. LLM Microservice
 
 ```bash
 curl http://${host_ip}:9000/v1/chat/completions \
@@ -195,7 +167,7 @@ curl http://${host_ip}:9000/v1/chat/completions \
   -H 'Content-Type: application/json'
 ```
 
-8. MegaService
+6. MegaService
 
 ```bash
 curl http://${host_ip}:8888/v1/chatqna -H "Content-Type: application/json" -d '{
@@ -203,7 +175,7 @@ curl http://${host_ip}:8888/v1/chatqna -H "Content-Type: application/json" -d '{
      }'
 ```
 
-9. Dataprep Microservice（Optional）
+7. Dataprep Microservice（Optional）
 
 If you want to update the default knowledge base, you can use the following commands:
 

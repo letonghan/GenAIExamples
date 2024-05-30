@@ -23,8 +23,6 @@ EMBEDDING_SERVICE_HOST_IP = os.getenv("EMBEDDING_SERVICE_HOST_IP", "0.0.0.0")
 EMBEDDING_SERVICE_PORT = os.getenv("EMBEDDING_SERVICE_PORT", 6000)
 RETRIEVER_SERVICE_HOST_IP = os.getenv("RETRIEVER_SERVICE_HOST_IP", "0.0.0.0")
 RETRIEVER_SERVICE_PORT = os.getenv("RETRIEVER_SERVICE_PORT", 7000)
-RERANK_SERVICE_HOST_IP = os.getenv("RERANK_SERVICE_HOST_IP", "0.0.0.0")
-RERANK_SERVICE_PORT = os.getenv("RERANK_SERVICE_PORT", 8000)
 LLM_SERVICE_HOST_IP = os.getenv("LLM_SERVICE_HOST_IP", "0.0.0.0")
 LLM_SERVICE_PORT = os.getenv("LLM_SERVICE_PORT", 9000)
 
@@ -52,14 +50,6 @@ class ChatQnAService:
             use_remote_service=True,
             service_type=ServiceType.RETRIEVER,
         )
-        rerank = MicroService(
-            name="rerank",
-            host=RERANK_SERVICE_HOST_IP,
-            port=RERANK_SERVICE_PORT,
-            endpoint="/v1/reranking",
-            use_remote_service=True,
-            service_type=ServiceType.RERANK,
-        )
         llm = MicroService(
             name="llm",
             host=LLM_SERVICE_HOST_IP,
@@ -68,10 +58,9 @@ class ChatQnAService:
             use_remote_service=True,
             service_type=ServiceType.LLM,
         )
-        self.megaservice.add(embedding).add(retriever).add(rerank).add(llm)
+        self.megaservice.add(embedding).add(retriever).add(llm)
         self.megaservice.flow_to(embedding, retriever)
-        self.megaservice.flow_to(retriever, rerank)
-        self.megaservice.flow_to(rerank, llm)
+        self.megaservice.flow_to(retriever, llm)
         self.gateway = ChatQnAGateway(megaservice=self.megaservice, host="0.0.0.0", port=self.port)
 
     async def schedule(self):

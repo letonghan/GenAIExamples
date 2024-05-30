@@ -21,18 +21,6 @@ services:
     ports:
       - "6379:6379"
       - "8001:8001"
-  dataprep-redis-service:
-    image: opea/dataprep-redis:latest
-    container_name: dataprep-redis-server
-    depends_on:
-      - redis-vector-db
-    ports:
-      - "6007:6007"
-    environment:
-      http_proxy: ${http_proxy}
-      https_proxy: ${https_proxy}
-      REDIS_URL: ${REDIS_URL}
-      INDEX_NAME: ${INDEX_NAME}
   tei-embedding-service:
     image: opea/tei-gaudi:latest
     container_name: tei-embedding-gaudi-server
@@ -83,35 +71,6 @@ services:
       LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2}
       LANGCHAIN_PROJECT: "opea-retriever-service"
     restart: unless-stopped
-  tei-xeon-service:
-    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.2
-    container_name: tei-xeon-server
-    ports:
-      - "8808:80"
-    volumes:
-      - "./data:/data"
-    shm_size: 1g
-    environment:
-      http_proxy: ${http_proxy}
-      https_proxy: ${https_proxy}
-    command: --model-id ${RERANK_MODEL_ID}
-  reranking:
-    image: opea/reranking-tei:latest
-    container_name: reranking-tei-gaudi-server
-    depends_on:
-      - tei-xeon-service
-    ports:
-      - "8000:8000"
-    ipc: host
-    environment:
-      http_proxy: ${http_proxy}
-      https_proxy: ${https_proxy}
-      TEI_RERANKING_ENDPOINT: ${TEI_RERANKING_ENDPOINT}
-      HF_TOKEN: ${HF_TOKEN}
-      LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
-      LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2}
-      LANGCHAIN_PROJECT: "opea-reranking-service"
-    restart: unless-stopped
   tgi-service:
     image: ghcr.io/huggingface/tgi-gaudi:1.2.1
     container_name: tgi-gaudi-server
@@ -141,7 +100,7 @@ services:
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
       TGI_LLM_ENDPOINT: ${TGI_LLM_ENDPOINT}
-      HF_TOKEN: ${HF_TOKEN}
+      HUGGINGFACEHUB_API_TOKEN: ${HF_TOKEN}
       LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
       LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2}
       LANGCHAIN_PROJECT: "opea-llm-service"
@@ -155,7 +114,6 @@ services:
       - embedding
       - retriever
       - tei-xeon-service
-      - reranking
       - tgi-service
       - llm
     ports:
