@@ -104,7 +104,6 @@ services:
       - tei-embedding-service
       - embedding
       - retriever
-      - tei-xeon-service
       - tgi-service
       - llm
     ports:
