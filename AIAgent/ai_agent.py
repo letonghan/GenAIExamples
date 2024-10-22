@@ -14,12 +14,14 @@ from comps import (
     register_microservice,
     register_statistics,
 )
-from utils import extract_task_list
-from prompts import start_goal_prompt, analyze_task_prompt, summarize_prompt
+from utils.utils import extract_task_list, get_args
+from prompts import start_goal_prompt, summarize_prompt
+from agent_planner import AgentPlanner
 
 
 logger = CustomLogger("ai_agent")
 logflag = os.getenv("LOGFLAG", False)
+args, _ = get_args()
 
 llm_endpoint = os.getenv("TGI_LLM_ENDPOINT", "http://localhost:8080")
 llm = AsyncInferenceClient(
@@ -79,36 +81,17 @@ async def agent_start(input: LLMParamsDoc):
     port=7071,
 )
 @register_statistics(names=["opea_service@ai_agent"])
-async def agent_execute(input: AgentTaskDoc):
+async def agent_start(input: LLMParamsDoc):
     if logflag:
         logger.info("[ Execute ] calling /v1/agent/execute router")
         logger.info(input)
 
-    goal = input.goal
-    task = input.task
-    # set Chinese as default language
-    language = "Chinese"
-
-    # use pre-defined prompt for llm inference
-    prompt = analyze_task_prompt.format(goal=goal, task=task, language=language)
-
-    if logflag:
-        logger.info(f"[ Execute ] final input prompt: {prompt}")
+    input_query = input.query
+    planner = AgentPlanner(args)
+    config = {"recursion_limit": args.recursion_limit}
     
-    text_generation = await llm.text_generation(
-        prompt=prompt,
-        stream=False,
-        max_new_tokens=input.max_tokens,
-        repetition_penalty=input.repetition_penalty,
-        temperature=input.temperature,
-        top_k=input.top_k,
-        top_p=input.top_p,
-    )
-
-    if logflag:
-        logger.info(f"[ Execute ] text generation: {text_generation}")
-
-    return text_generation
+    response = await planner.non_streaming_run(input_query, config)
+    return response
 
 
 @register_microservice(
