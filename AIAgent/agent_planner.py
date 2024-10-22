@@ -1,3 +1,5 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 
 import asyncio
 from langchain import PromptTemplate
@@ -6,12 +8,12 @@ from huggingface_hub import ChatCompletionOutputFunctionDefinition, ChatCompleti
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import END, StateGraph
 from prompts import REACT_AGENT_LLAMA_PROMPT
-from ai_agent.utils.agent_utils import (
+from utils.agent_utils import (
     setup_model,
     AgentState,
     AgentOutputParser,
 )
-from ai_agent.utils.utils import (
+from utils.utils import (
     get_tools_descriptions,
     tool_renderer,
     assemble_history,
