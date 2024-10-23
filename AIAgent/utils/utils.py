@@ -59,7 +59,7 @@ def get_args():
     parser.add_argument("--temperature", type=float, default=0.01)
     parser.add_argument("--repetition_penalty", type=float, default=1.03)
     parser.add_argument("--return_full_text", type=bool, default=False)
-    parser.add_argument("--tool_yaml_path", type=str, default="./tools/supervisor_agent_tools.yaml")
+    parser.add_argument("--tool_yaml_path", type=str, default="./tools/agent_tools.yaml")
 
     sys_args, unknown_args = parser.parse_known_args()
     # print("env_config: ", env_config)
