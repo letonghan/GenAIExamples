@@ -6,12 +6,7 @@ echo "WORKDIR=${WORKDIR}"
 export ip_address=$(hostname -I | awk '{print $1}')
 export no_proxy=${ip_address}
 export HUGGINGFACEHUB_API_TOKEN=${HUGGINGFACEHUB_API_TOKEN}
-export TOOLSET_PATH="/home/kding1/letong/ai_agent/tools/"
-export recursion_limit_worker=12
-export llm_endpoint_url="http://${ip_address}:8085"
 export model="Qwen/Qwen2.5-72B-Instruct"
-export temperature=0.01
-export max_new_tokens=512
 export LOGFLAG="true"
 
 
@@ -26,13 +21,11 @@ start_tgi_ragagent
 
 
 function start_agent_planner() {
-    export strategy=rag_agent
-    export recursion_limit=12
-    export streaming=false
-    export require_human_feedback=false
-    export port=9090
-    export WORKER_AGENT_URL="http://${ip_address}:9095/v1/chat/completions"
     export tool_yaml_path="/home/kding1/letong/ai_agent/tools/agent_tools.yaml"
+    export llm_endpoint_url="http://${ip_address}:8085"
+    export TEI_EMBEDDING_ENDPOINT="http://${ip_address}:3001"
+    export WEB_RETRIEVER_ENDPOINT="http://${ip_address}:3003"
+    export TEI_RERANKING_ENDPOINT="http://${ip_address}:3004"
 
     python agent_planner.py
 }

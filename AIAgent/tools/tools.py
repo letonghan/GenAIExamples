@@ -5,15 +5,51 @@ import os
 import requests
 
 
-def search_knowledge_base(query: str) -> str:
-    """Search the knowledge base for a specific query."""
-    # use worker agent (DocGrader) to search the knowledge base
-    url = os.environ.get("WORKER_AGENT_URL")
-    print(url)
+def send_post_request(url, payload):
     proxies = {"http": ""}
-    payload = {
-        "query": query,
-    }
     response = requests.post(url, json=payload, proxies=proxies)
-    return response.json()["text"]
+    return response
+
+
+def web_search_retriever(query: str) -> str:
+    """Search from web for a specific query."""
+    
+    tei_embedding_endpoint = os.environ.get("TEI_EMBEDDING_ENDPOINT")
+    web_retriever_endpoint = os.environ.get("WEB_RETRIEVER_ENDPOINT")
+    tei_reranking_endpoint = os.environ.get("TEI_RERANKING_ENDPOINT")
+    
+    #############################
+    # prepare embedding vector  #
+    #############################
+    embedding_payload = {
+        "inputs": query
+    }
+    embedding_res = send_post_request(tei_embedding_endpoint+"/embed", embedding_payload)
+    embedding_vector = embedding_res.json()[0]
+    
+    #############################
+    #   searching with google   #
+    #############################
+    web_retriever_payload = {
+        "text": query,
+        "embedding": embedding_vector
+    }
+    response = send_post_request(web_retriever_endpoint+"/v1/web_retrieval", web_retriever_payload)
+    retrieved_docs = response.json()['retrieved_docs']
+    retrieved_doc_list = [doc['text'] for doc in retrieved_docs]
+    
+    #############################
+    # rerank the retrieved docs #
+    #############################
+    rerank_payload = {
+        "query": query,
+        "texts": retrieved_doc_list
+    }
+    rerank_res = send_post_request(tei_reranking_endpoint+"/rerank", rerank_payload).json()
+    highest_score_index = max(rerank_res, key=lambda x: x['score'])['index']
+    
+    final_result = retrieved_doc_list[highest_score_index]
+    
+    return final_result
+
 

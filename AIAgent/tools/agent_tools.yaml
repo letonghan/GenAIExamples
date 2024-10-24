@@ -1,12 +1,12 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-search_knowledge_base:
-  description: Search knowledge base for a given query. Returns text related to the query.
-  callable_api: tools.py:search_knowledge_base
+web_search_retriever:
+  description: "根据给定的query内容,通过Google获取网页内容,并返回筛选后的最相符的结果。"
+  callable_api: tools.py:web_search_retriever
   args_schema:
     query:
       type: str
       description: query
-  return_output: retrieved_data
+  return_output: web_searched_result
 

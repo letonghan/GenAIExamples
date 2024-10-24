@@ -1,0 +1,59 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+services:
+  tei-embedding-service:
+    image: ghcr.io/huggingface/tei-gaudi:latest
+    container_name: agent-tei-embedding-server
+    ports:
+      - "3001:80"
+    volumes:
+      - "/home/kding1/letong/data:/data"
+    runtime: habana
+    cap_add:
+      - SYS_NICE
+    ipc: host
+    environment:
+      no_proxy: ${no_proxy}
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      HABANA_VISIBLE_DEVICES: "2"
+      OMPI_MCA_btl_vader_single_copy_mechanism: none
+      MAX_WARMUP_SEQUENCE_LENGTH: 512
+      INIT_HCCL_ON_ACQUIRE: 0
+      ENABLE_EXPERIMENTAL_FLAGS: true
+    command: --model-id ${EMBEDDING_MODEL_ID} --auto-truncate
+
+  web-retriever:
+    image: ${REGISTRY:-opea}/web-retriever-chroma:${TAG:-latest}
+    container_name: agent-web-retriever-chroma-server
+    ports:
+      - "3003:7077"
+    ipc: host
+    environment:
+      no_proxy: ${no_proxy}
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      TEI_EMBEDDING_ENDPOINT: ${TEI_EMBEDDING_ENDPOINT}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      GOOGLE_CSE_ID: ${GOOGLE_CSE_ID}
+      LOGFLAG: ${LOGFLAG}
+    restart: unless-stopped
+
+  tei-reranking-service:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
+    container_name: agent-tei-reranking-server
+    ports:
+      - "3004:80"
+    volumes:
+      - "./data:/data"
+    shm_size: 1g
+    environment:
+      no_proxy: ${no_proxy}
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+    command: --model-id ${RERANK_MODEL_ID} --auto-truncate
+
+networks:
+  default:
+    driver: bridge
