@@ -25,55 +25,21 @@ query: "What are the nutritional values of almond milk and soy milk?", answer: [
     input_variables=["goal", "language"],
 )
 
-analyze_task_prompt = PromptTemplate(
-    template="""
-    High level objective: "{goal}"
-    Current task: "{task}"
 
-    Based on this information, use the best function to make progress or accomplish the task entirely.
-    Select the correct function by being smart and efficient. Ensure "reasoning" and only "reasoning" is in the
-    {language} language.
+start_goal_prompt_zh = PromptTemplate(
+    template="""你是一款名为 AIAgent 的任务生成 AI。请使用中文回答。你的目标是“{goal}”。
 
-    Note you MUST select a function.
-    """,
-    input_variables=["goal", "task", "language"],
+返回回答此目标所需的搜索查询列表，最多包含 5 个查询，并确保查询尽量简洁。如果是简单问题，则使用单一查询。
+
+将答案以 JSON 字符串数组的格式返回。示例如下：
+
+query: "当前赛季被认为最好的 NBA 球员是谁？", answer: ["当前 NBA MVP 候选人"] 
+query: "Olympicpayroll 品牌目前在市场中的地位如何？其在 NJ、NY 和 PA 的扩展前景和策略是什么？", answer: ["Olympicpayroll 品牌 2023 综合分析", "Olympicpayroll.com 的用户评价", "Olympicpayroll 市场地位分析", "2023-2025 年工资单行业趋势预测", "在 NJ、NY、PA 扩展的工资服务策略"] 
+query: "杏仁奶和豆奶的营养价值是什么？", answer: ["杏仁奶的营养信息", "豆奶的营养信息"]
+""",
+    input_variables=["goal"],
 )
 
-execute_task_prompt = PromptTemplate(
-    template="""Answer in the "{language}" language. Given
-    the following overall objective `{goal}` and the following sub-task, `{task}`.
-
-    Perform the task by understanding the problem, extracting variables, and being smart
-    and efficient. Write a detailed response that address the task.
-    When confronted with choices, make a decision yourself with reasoning.
-    """,
-    input_variables=["goal", "language", "task"],
-)
-
-create_tasks_prompt = PromptTemplate(
-    template="""You are an AI task creation agent. You must answer in the "{language}"
-    language. You have the following objective `{goal}`.
-
-    You have the following incomplete tasks:
-    `{tasks}`
-
-    You just completed the following task:
-    `{lastTask}`
-
-    And received the following result:
-    `{result}`.
-
-    Based on this, create a single new task to be completed by your AI system such that your goal is closer reached.
-    If there are no more tasks to be done, return nothing. Do not add quotes to the task.
-
-    Examples:
-    Search the web for NBA news
-    Create a function to add a new vertex with a specified weight to the digraph.
-    Search for any additional information on Bertie W.
-    ""
-    """,
-    input_variables=["goal", "language", "tasks", "lastTask", "result"],
-)
 
 summarize_prompt = PromptTemplate(
     template="""You must answer in the "{language}" language.
@@ -92,82 +58,21 @@ summarize_prompt = PromptTemplate(
     input_variables=["goal", "language", "text"],
 )
 
-company_context_prompt = PromptTemplate(
-    template="""You must answer in the "{language}" language.
 
-    Create a short description on "{company_name}".
-    Find out what sector it is in and what are their primary products.
+summarize_prompt_zh = PromptTemplate(
+    template="""请使用中文回答。
 
-    Be as clear, informative, and descriptive as necessary.
-    You will not make up information or add any information outside of the above text.
-    Only use the given information and nothing more.
+请将以下文本整合成连贯的文档：
 
-    If there is no information provided, say "There is nothing to summarize".
+“{text}”
+
+请使用清晰的 Markdown 格式，并确保符合“{goal}”的写作风格要求。内容应尽可能清晰、信息丰富且描述详尽。
+不要添加任何虚构信息或额外内容，仅使用所给信息。
+
+如果没有提供任何信息，请回答“没有可以总结的内容”。
     """,
-    input_variables=["company_name", "language"],
+    input_variables=["goal", "text"],
 )
-
-summarize_pdf_prompt = PromptTemplate(
-    template="""You must answer in the "{language}" language.
-
-    For the given text: "{text}", you have the following objective "{query}".
-
-    Be as clear, informative, and descriptive as necessary.
-    You will not make up information or add any information outside of the above text.
-    Only use the given information and nothing more.
-    """,
-    input_variables=["query", "language", "text"],
-)
-
-summarize_with_sources_prompt = PromptTemplate(
-    template="""You must answer in the "{language}" language.
-
-    Answer the following query: "{query}" using the following information: "{snippets}".
-    Write using clear markdown formatting and use markdown lists where possible.
-
-    Cite sources for sentences via markdown links using the source link as the link and the index as the text.
-    Use in-line sources. Do not separately list sources at the end of the writing.
-    
-    If the query cannot be answered with the provided information, mention this and provide a reason why along with what it does mention. 
-    Also cite the sources of what is actually mentioned.
-    
-    Example sentences of the paragraph: 
-    "So this is a cited sentence at the end of a paragraph[1](https://test.com). This is another sentence."
-    "Stephen curry is an american basketball player that plays for the warriors[1](https://www.britannica.com/biography/Stephen-Curry)."
-    "The economic growth forecast for the region has been adjusted from 2.5% to 3.1% due to improved trade relations[1](https://economictimes.com), while inflation rates are expected to remain steady at around 1.7% according to financial analysts[2](https://financeworld.com)."
-    """,
-    input_variables=["language", "query", "snippets"],
-)
-
-summarize_sid_prompt = PromptTemplate(
-    template="""You must answer in the "{language}" language.
-
-    Parse and summarize the following text snippets "{snippets}".
-    Write using clear markdown formatting in a style expected of the goal "{goal}".
-    Be as clear, informative, and descriptive as necessary and attempt to
-    answer the query: "{query}" as best as possible.
-    If any of the snippets are not relevant to the query,
-    ignore them, and do not include them in the summary.
-    Do not mention that you are ignoring them.
-
-    If there is no information provided, say "There is nothing to summarize".
-    """,
-    input_variables=["goal", "language", "query", "snippets"],
-)
-
-chat_prompt = PromptTemplate(
-    template="""You must answer in the "{language}" language.
-
-    You are a helpful AI Assistant that will provide responses based on the current conversation history.
-
-    The human will provide previous messages as context. Use ONLY this information for your responses.
-    Do not make anything up and do not add any additional information.
-    If you have no information for a given question in the conversation history,
-    say "I do not have any information on this".
-    """,
-    input_variables=["language"],
-)
-
 
 
 REACT_AGENT_LLAMA_PROMPT = """\

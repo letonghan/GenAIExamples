@@ -1,5 +1,3 @@
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
 import os
 import re
@@ -42,27 +40,12 @@ def get_args():
     # llm args
     parser.add_argument("--streaming", type=str, default="true")
     parser.add_argument("--port", type=int, default=9090)
-    parser.add_argument("--agent_name", type=str, default="OPEA_Default_Agent")
-    parser.add_argument("--strategy", type=str, default="react_langchain")
-    parser.add_argument("--role_description", type=str, default="LLM enhanced agent")
-    parser.add_argument("--tools", type=str, default="tools/custom_tools.yaml")
     parser.add_argument("--recursion_limit", type=int, default=5)
-    parser.add_argument("--require_human_feedback", action="store_true", help="If this agent requires human feedback")
-    parser.add_argument("--debug", action="store_true", help="Test with endpoint mode")
-
-    parser.add_argument("--model", type=str, default="meta-llama/Meta-Llama-3-8B-Instruct")
-    parser.add_argument("--llm_engine", type=str, default="tgi")
+    parser.add_argument("--model", type=str, default="Qwen/Qwen2.5-72B-Instruct")
     parser.add_argument("--llm_endpoint_url", type=str, default="http://localhost:8080")
-    parser.add_argument("--max_new_tokens", type=int, default=1024)
-    parser.add_argument("--top_k", type=int, default=10)
-    parser.add_argument("--top_p", type=float, default=0.95)
-    parser.add_argument("--temperature", type=float, default=0.01)
-    parser.add_argument("--repetition_penalty", type=float, default=1.03)
-    parser.add_argument("--return_full_text", type=bool, default=False)
-    parser.add_argument("--tool_yaml_path", type=str, default="./tools/agent_tools.yaml")
+    parser.add_argument("--tool_yaml_path", type=str, default="./tools/supervisor_agent_tools.yaml")
 
     sys_args, unknown_args = parser.parse_known_args()
-    # print("env_config: ", env_config)
     if env_config != []:
         env_args, env_unknown_args = parser.parse_known_args(env_config)
         unknown_args += env_unknown_args

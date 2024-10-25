@@ -7,7 +7,6 @@ from huggingface_hub import AsyncInferenceClient
 from comps import (
     CustomLogger,
     LLMParamsDoc,
-    AgentTaskDoc,
     AgentSumDoc,
     ServiceType,
     opea_microservices,
@@ -15,15 +14,17 @@ from comps import (
     register_statistics,
 )
 from utils.utils import extract_task_list, get_args
-from prompts import start_goal_prompt, summarize_prompt
+from prompts import start_goal_prompt, start_goal_prompt_zh, summarize_prompt, summarize_prompt_zh
 from agent_planner import AgentPlanner
+from fastapi.responses import StreamingResponse
 
 
 logger = CustomLogger("ai_agent")
 logflag = os.getenv("LOGFLAG", False)
 args, _ = get_args()
+planner = AgentPlanner(args)
 
-llm_endpoint = os.getenv("TGI_LLM_ENDPOINT", "http://localhost:8080")
+llm_endpoint = os.getenv("llm_endpoint_url", "http://localhost:8080")
 llm = AsyncInferenceClient(
     model=llm_endpoint,
     timeout=600,
@@ -44,11 +45,9 @@ async def agent_start(input: LLMParamsDoc):
         logger.info(input)
 
     goal = input.query
-    # set Chinese as default language
-    language = "Chinese"
 
     # use pre-defined prompt for llm inference
-    prompt = start_goal_prompt.format(goal=goal, language=language)
+    prompt = start_goal_prompt_zh.format(goal=goal)
 
     if logflag:
         logger.info(f"[ Start ] final input prompt: {prompt}")
@@ -87,11 +86,11 @@ async def agent_start(input: LLMParamsDoc):
         logger.info(input)
 
     input_query = input.query
-    planner = AgentPlanner(args)
     config = {"recursion_limit": args.recursion_limit}
     
-    response = await planner.non_streaming_run(input_query, config)
-    return response
+    generator = planner.stream_generator(input_query, config)
+    
+    return StreamingResponse(generator, media_type="text/event-stream")
 
 
 @register_microservice(
@@ -115,7 +114,7 @@ async def agent_start(input: AgentSumDoc):
     text = " ".join(results)
 
     # use pre-defined prompt for llm inference
-    prompt = summarize_prompt.format(goal=goal, language=language, text=text)
+    prompt = summarize_prompt_zh.format(goal=goal, text=text)
 
     if logflag:
         logger.info(f"[ Summarize ] final input prompt: {prompt}")
@@ -138,3 +137,4 @@ async def agent_start(input: AgentSumDoc):
 
 if __name__ == "__main__":
     opea_microservices["opea_service@ai_agent"].start()
+

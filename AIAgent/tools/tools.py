@@ -13,6 +13,9 @@ def send_post_request(url, payload):
 
 def web_search_retriever(query: str) -> str:
     """Search from web for a specific query."""
+    from datetime import datetime
+
+    start_time = datetime.now()
     
     tei_embedding_endpoint = os.environ.get("TEI_EMBEDDING_ENDPOINT")
     web_retriever_endpoint = os.environ.get("WEB_RETRIEVER_ENDPOINT")
@@ -35,6 +38,7 @@ def web_search_retriever(query: str) -> str:
         "embedding": embedding_vector
     }
     response = send_post_request(web_retriever_endpoint+"/v1/web_retrieval", web_retriever_payload)
+    print(response)
     retrieved_docs = response.json()['retrieved_docs']
     retrieved_doc_list = [doc['text'] for doc in retrieved_docs]
     
@@ -49,7 +53,11 @@ def web_search_retriever(query: str) -> str:
     highest_score_index = max(rerank_res, key=lambda x: x['score'])['index']
     
     final_result = retrieved_doc_list[highest_score_index]
+    print("================")
+    print(final_result)
     
+    elapsed_time = datetime.now() - start_time
+    print("==================")
+    print(f"Execution time: {elapsed_time}")
     return final_result
-
 
