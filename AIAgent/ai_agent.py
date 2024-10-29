@@ -21,6 +21,7 @@ from fastapi.responses import StreamingResponse
 
 logger = CustomLogger("ai_agent")
 logflag = os.getenv("LOGFLAG", False)
+service_port = os.getenv("PORT", 7071)
 args, _ = get_args()
 planner = AgentPlanner(args)
 
@@ -36,7 +37,7 @@ llm = AsyncInferenceClient(
     service_type=ServiceType.LLM,
     endpoint="/v1/agent/start",
     host="0.0.0.0",
-    port=7071,
+    port=service_port,
 )
 @register_statistics(names=["opea_service@ai_agent"])
 async def agent_start(input: LLMParamsDoc):
@@ -47,7 +48,7 @@ async def agent_start(input: LLMParamsDoc):
     goal = input.query
 
     # use pre-defined prompt for llm inference
-    prompt = start_goal_prompt_zh.format(goal=goal)
+    prompt = start_goal_prompt.format(goal=goal, language="Chinese")
 
     if logflag:
         logger.info(f"[ Start ] final input prompt: {prompt}")
@@ -55,7 +56,7 @@ async def agent_start(input: LLMParamsDoc):
     text_generation = await llm.text_generation(
         prompt=prompt,
         stream=False,
-        max_new_tokens=input.max_tokens,
+        max_new_tokens=128,
         repetition_penalty=input.repetition_penalty,
         temperature=input.temperature,
         top_k=input.top_k,
@@ -77,7 +78,7 @@ async def agent_start(input: LLMParamsDoc):
     name="opea_service@ai_agent",
     endpoint="/v1/agent/execute",
     host="0.0.0.0",
-    port=7071,
+    port=service_port,
 )
 @register_statistics(names=["opea_service@ai_agent"])
 async def agent_start(input: LLMParamsDoc):
@@ -98,7 +99,7 @@ async def agent_start(input: LLMParamsDoc):
     service_type=ServiceType.LLM,
     endpoint="/v1/agent/summarize",
     host="0.0.0.0",
-    port=7071,
+    port=service_port,
 )
 @register_statistics(names=["opea_service@ai_agent"])
 async def agent_start(input: AgentSumDoc):
@@ -107,32 +108,44 @@ async def agent_start(input: AgentSumDoc):
         logger.info(input)
 
     goal = input.goal
-    # set Chinese as default language
     language = input.language
     results = input.results
 
     text = " ".join(results)
-
-    # use pre-defined prompt for llm inference
-    prompt = summarize_prompt_zh.format(goal=goal, text=text)
+    prompt = summarize_prompt.format(goal=goal, language=language, text=text)
 
     if logflag:
         logger.info(f"[ Summarize ] final input prompt: {prompt}")
     
     text_generation = await llm.text_generation(
         prompt=prompt,
-        stream=False,
+        stream=input.streaming,
         max_new_tokens=input.max_tokens,
         repetition_penalty=input.repetition_penalty,
         temperature=input.temperature,
         top_k=input.top_k,
         top_p=input.top_p,
     )
+    
+    if input.streaming:
+        async def stream_generator():
+            chat_response = ""
+            async for text in text_generation:
+                chat_response += text
+                chunk_repr = text
+                if logflag:
+                    logger.info(f"[ Summarize ] chunk:{chunk_repr}")
+                yield f"data: {chunk_repr}\n\n"
+            if logflag:
+                logger.info(f"[ Summarize ] stream response: {chat_response}")
+            yield "data: [DONE]\n\n"
 
-    if logflag:
-        logger.info(f"[ Summarize ] text generation: {text_generation}")
+        return StreamingResponse(stream_generator(), media_type="text/event-stream")
 
-    return text_generation
+    else:
+        if logflag:
+            logger.info(f"[ Summarize ] text generation: {text_generation}")
+        return text_generation
 
 
 if __name__ == "__main__":

@@ -1,10 +1,8 @@
-# Copyright (C) 2024 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 
+import json
 import asyncio
 from langchain import PromptTemplate
 from langchain_core.messages import AIMessage, ToolMessage, HumanMessage
-from huggingface_hub import ChatCompletionOutputFunctionDefinition, ChatCompletionOutputToolCall
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import END, StateGraph
 from prompts import REACT_AGENT_LLAMA_PROMPT
@@ -18,23 +16,25 @@ from utils.utils import (
     tool_renderer,
     assemble_history,
     convert_json_to_tool_call,
-    get_args
+    get_args,
+    extract_web_source
 )
 
 
 class AgentNode:
     
-    def __init__(self, llm_endpoint, model_id, tool_yaml_path):
+    def __init__(self, llm_endpoint, model_id, tool_yaml_path, language):
         # init llm chain
         prompt = PromptTemplate(
             template=REACT_AGENT_LLAMA_PROMPT,
-            input_variables=["input", "history", "tools"],
+            input_variables=["input", "history", "tools", "language"],
         )
         my_model = setup_model(llm_endpoint, model_id)
         output_parser = AgentOutputParser()
         
         self.chain = prompt | my_model | output_parser
         self.tool_yaml_path = tool_yaml_path
+        self.language = language
         self._load_tools()
         
     def _load_tools(self):
@@ -50,14 +50,18 @@ class AgentNode:
         history = assemble_history(messages)
         
         # invoke llm chain
-        output = self.chain.invoke({"input": query, "history": history, "tools": self.tools_descriptions})
-            
+        output = self.chain.invoke({
+            "input": query, 
+            "history": history, 
+            "tools": self.tools_descriptions,
+            "language": self.language
+        })
+
         # convert output to tool calls
         tool_calls = []
         for res in output:
             if "tool" in res:
                 add_kw_tc, tool_call = convert_json_to_tool_call(res)
-                # print("Tool call:\n", tool_call)
                 tool_calls.append(tool_call)
 
         if tool_calls:
@@ -76,7 +80,8 @@ class AgentPlanner:
         agent_node = AgentNode(
             llm_endpoint=args.llm_endpoint_url,
             model_id=args.model,
-            tool_yaml_path=args.tool_yaml_path
+            tool_yaml_path=args.tool_yaml_path,
+            language=args.language
         )
         tool_node = ToolNode(self.tools_descriptions)
         workflow = StateGraph(AgentState)
@@ -86,8 +91,6 @@ class AgentPlanner:
         workflow.add_node("tools", tool_node)
 
         workflow.set_entry_point("agent")
-
-        # We now add a conditional edge
         workflow.add_conditional_edges(
             # First, we define the start node. We use `agent`.
             # This means these are the edges taken after the `agent` node is called.
@@ -126,23 +129,36 @@ class AgentPlanner:
         try:
             async for event in self.app.astream(initial_state, config=config):
                 for node_name, node_state in event.items():
-                    yield f"--- CALL {node_name} ---\n"
                     for k, v in node_state.items():
                         if v is not None:
-                            yield f"{k}: {v}\n"
-
-                yield f"data: {repr(event)}\n\n"
+                            if node_name == "agent":
+                                if v[0].content == "":
+                                    tool_name = v[0].additional_kwargs['tool_calls'][0].function.name
+                                    result = {"tool": tool_name}
+                                else:
+                                    print(v[0].content)
+                                    result = {"content": v[0].content.replace("\n", " ")}
+                                yield f"data: {json.dumps(result)}\n\n"
+                            elif node_name == "tools":
+                                full_content = v[0].content
+                                tool_name = v[0].name
+                                result = {
+                                    "tool": tool_name,
+                                    "content": full_content
+                                }
+                                if "web" in tool_name:
+                                    source = extract_web_source(full_content)
+                                    result["source"] = source
+                                yield f"data: {json.dumps(result)}\n\n"
+                                
             yield "data: [DONE]\n\n"
         except Exception as e:
             yield str(e)
             
     async def non_streaming_run(self, query, config):
         initial_state = self.prepare_initial_state(query)
-        print(f"################# planner non streaming run")
         try:
             async for s in self.app.astream(initial_state, config=config, stream_mode="values"):
-                print(s)
-                print("-------------------")
                 message = s["messages"][-1]
                 if isinstance(message, tuple):
                     print(message)
@@ -154,18 +170,4 @@ class AgentPlanner:
             return last_message.content
         except Exception as e:
             return str(e)
-
-
-async def main():
-    args, _ = get_args()
-    planner = AgentPlanner(args)
-    input_query = "Most recent album by Taylor Swift"
-    config = {"recursion_limit": args.recursion_limit}
-
-    response = await planner.non_streaming_run(input_query, config)
-    print("============ finish ===========")
-    print(response)
-
-
-asyncio.run(main())
 

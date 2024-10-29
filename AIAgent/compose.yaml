@@ -27,4 +27,4 @@ services:
     cap_add:
       - SYS_NICE
     ipc: host
-    command: --model-id ${model} --max-input-length 4096 --max-total-tokens 8192 --sharded true --num-shard 2
+    command: --model-id ${model} --max-input-length 8192 --max-total-tokens 16384 --sharded true --num-shard 2

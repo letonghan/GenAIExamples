@@ -12,6 +12,7 @@ export LOGFLAG="true"
 export TEI_EMBEDDING_ENDPOINT="http://${ip_address}:3001"
 export WEB_RETRIEVER_ENDPOINT="http://${ip_address}:3003"
 export TEI_RERANKING_ENDPOINT="http://${ip_address}:3004"
+export PYTHONPATH="/home/kding1/letong/GenAIComps/"
 
 
 function start_tgi_ragagent() {

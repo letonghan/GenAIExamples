@@ -44,6 +44,7 @@ def get_args():
     parser.add_argument("--model", type=str, default="Qwen/Qwen2.5-72B-Instruct")
     parser.add_argument("--llm_endpoint_url", type=str, default="http://localhost:8080")
     parser.add_argument("--tool_yaml_path", type=str, default="./tools/supervisor_agent_tools.yaml")
+    parser.add_argument("--language", type=str, default="Chinese")
 
     sys_args, unknown_args = parser.parse_known_args()
     if env_config != []:
@@ -233,4 +234,11 @@ def convert_json_to_tool_call(json_str):
     }
     tool_call = ToolCall(name=tool_name, args=tool_args, id=tcid)
     return add_kw_tc, tool_call
+
+
+def extract_web_source(text: str):
+    import re
+    pattern = r"source: (https://[^\s]+)\s"
+    matches = re.findall(pattern, text)
+    return list(set(matches))
 
