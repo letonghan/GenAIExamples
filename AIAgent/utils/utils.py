@@ -30,7 +30,9 @@ def extract_task_list(llm_output: str) -> list:
     
     matches = re.findall(pattern, llm_output)
     
-    task_list = [match.strip('"') for match in matches]
+    task_list = []
+    for match in matches:
+        task_list.extend(match.replace("\"", "").split(", "))
     
     return task_list
 
