@@ -34,7 +34,7 @@ def extract_task_list(llm_output: str) -> list:
     for match in matches:
         task_list.extend(match.replace("\"", "").split(", "))
     
-    return task_list
+    return [s.replace(" ", "") for s in task_list]
 
 
 def get_args():
