@@ -171,3 +171,17 @@ class AgentPlanner:
         except Exception as e:
             return str(e)
 
+
+async def main():
+    args, _ = get_args()
+    planner = AgentPlanner(args)
+    input_query = "Most recent album by Taylor Swift"
+    # input_query = "简单列出这篇文章的贡献，https://qianwen-res.oss-cn-beijing.aliyuncs.com/QWEN_TECHNICAL_REPORT.pdf"
+    config = {"recursion_limit": args.recursion_limit}
+
+    response = await planner.non_streaming_run(input_query, config)
+    print("============ finish ===========")
+    print(response)
+
+if __name__ == "__main__":
+    asyncio.run(main())
