@@ -25,6 +25,7 @@ services:
       INDEX_NAME: ${INDEX_NAME}
       TEI_ENDPOINT: http://tei-embedding-service:80
       HUGGINGFACEHUB_API_TOKEN: ${HUGGINGFACEHUB_API_TOKEN}
+      LOGFLAG: true
 
   tei-embedding-service:
     image: ghcr.io/huggingface/tei-gaudi:latest

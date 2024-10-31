@@ -18,3 +18,4 @@ export REDIS_URL="redis://${ip_address}:6379"
 
 
 docker compose -f compose.yaml up -d
+

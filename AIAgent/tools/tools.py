@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
-import requests
 import json
+import requests
 from requests.exceptions import RequestException
 from typing import Any, Dict, List, Literal, Optional, Union
 
@@ -87,6 +87,8 @@ def rag_retriever(query: str, files: str) -> str:
     retrieval_endpoint = os.environ.get("RETRIEVAL_ENDPOINT")
     tei_reranking_endpoint = os.environ.get("TEI_RERANKING_ENDPOINT")
 
+    """
+
     #############################
     # prepare data  #
     #############################
@@ -106,6 +108,7 @@ def rag_retriever(query: str, files: str) -> str:
             print(response)
         except RequestException as e:
             raise Exception(f"An unexpected error occurred: {str(e)}")
+    """
 
     #############################
     # prepare embedding vector  #
@@ -149,13 +152,18 @@ def rag_retriever(query: str, files: str) -> str:
         "texts": retrieved_documents
     }
     rerank_res = send_post_request(tei_reranking_endpoint+"/rerank", rerank_payload).json()
-    highest_score_index = max(rerank_res, key=lambda x: x['score'])['index']
+    highest_score_index = sorted(rerank_res, key=lambda x: x['score'])
+    # print(highest_score_index)
 
-    final_result = retrieved_documents[highest_score_index]
-    print("================")
-    print(final_result)
+    # final_result = retrieved_documents[highest_score_index]
+    final_result = "\n".join(retrieved_documents[:5]) + '\n' + \
+        "The relevant content has already been retrieved and updated in the previous system message."
+    # print("================")
+    # print(final_result)
 
     elapsed_time = datetime.now() - start_time
     print("==================")
     print(f"Execution time: {elapsed_time}")
+    # exit()
     return final_result
+
