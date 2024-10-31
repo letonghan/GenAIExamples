@@ -26,21 +26,6 @@ query: "What are the nutritional values of almond milk and soy milk?", answer: [
 )
 
 
-start_goal_prompt_zh = PromptTemplate(
-    template="""你是一款名为 AIAgent 的任务生成 AI。请使用中文回答。你的目标是“{goal}”。
-
-返回回答此目标所需的搜索查询列表，最多包含 5 个查询，并确保查询尽量简洁。如果是简单问题，则使用单一查询。
-
-将答案以 JSON 字符串数组的格式返回。示例如下：
-
-query: "当前赛季被认为最好的 NBA 球员是谁？", answer: ["当前 NBA MVP 候选人"] 
-query: "Olympicpayroll 品牌目前在市场中的地位如何？其在 NJ、NY 和 PA 的扩展前景和策略是什么？", answer: ["Olympicpayroll 品牌 2023 综合分析", "Olympicpayroll.com 的用户评价", "Olympicpayroll 市场地位分析", "2023-2025 年工资单行业趋势预测", "在 NJ、NY、PA 扩展的工资服务策略"] 
-query: "杏仁奶和豆奶的营养价值是什么？", answer: ["杏仁奶的营养信息", "豆奶的营养信息"]
-""",
-    input_variables=["goal"],
-)
-
-
 summarize_prompt = PromptTemplate(
     template="""You must answer in the "{language}" language.
 
@@ -56,22 +41,6 @@ summarize_prompt = PromptTemplate(
     If there is no information provided, say "There is nothing to summarize".
     """,
     input_variables=["goal", "language", "text"],
-)
-
-
-summarize_prompt_zh = PromptTemplate(
-    template="""请使用中文回答。
-
-请将以下文本整合成连贯的文档：
-
-“{text}”
-
-请使用清晰的 Markdown 格式，并确保符合“{goal}”的写作风格要求。内容应尽可能清晰、信息丰富且描述详尽。
-不要添加任何虚构信息或额外内容，仅使用所给信息。
-
-如果没有提供任何信息，请回答“没有可以总结的内容”。
-    """,
-    input_variables=["goal", "text"],
 )
 
 

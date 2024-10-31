@@ -1,13 +1,12 @@
 
 import json
-import asyncio
 from langchain import PromptTemplate
-from langchain_core.messages import AIMessage, ToolMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import END, StateGraph
 from prompts import REACT_AGENT_LLAMA_PROMPT
 from utils.agent_utils import (
-    setup_model,
+    setup_chat_model,
     AgentState,
     AgentOutputParser,
 )
@@ -25,14 +24,14 @@ class AgentNode:
     
     def __init__(self, llm_endpoint, model_id, tool_yaml_path, language):
         # init llm chain
-        prompt = PromptTemplate(
+        self.prompt = PromptTemplate(
             template=REACT_AGENT_LLAMA_PROMPT,
             input_variables=["input", "history", "tools", "language"],
         )
-        my_model = setup_model(llm_endpoint, model_id)
+        self.my_model = setup_chat_model(llm_endpoint, model_id)
         output_parser = AgentOutputParser()
         
-        self.chain = prompt | my_model | output_parser
+        self.chain = self.prompt | self.my_model | output_parser
         self.tool_yaml_path = tool_yaml_path
         self.language = language
         self._load_tools()

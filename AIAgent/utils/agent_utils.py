@@ -3,10 +3,9 @@ import json
 from typing import Annotated, Sequence, TypedDict
 from langchain_core.output_parsers import BaseOutputParser
 from langchain_core.messages import BaseMessage
-from langchain_huggingface import ChatHuggingFace
-from langchain_huggingface.llms.huggingface_endpoint import HuggingFaceEndpoint
 from langgraph.graph.message import add_messages
 from langgraph.managed import IsLastStep
+from langchain_openai import ChatOpenAI
 
 
 class AgentOutputParser(BaseOutputParser):
@@ -34,25 +33,12 @@ class AgentState(TypedDict):
     is_last_step: IsLastStep
 
 
-def setup_model(llm_endpoint, model_id):
-    print(f"---- set up model with: {llm_endpoint}")
-
-    generation_params = {
-        "max_new_tokens": 4096,
-        "top_k": 10,
-        "top_p": 0.95,
-        "temperature": 0.001,
-        "repetition_penalty": 1.03,
-        "return_full_text": False,
-        "streaming": True,
+def setup_chat_model(llm_endpoint, model_id):
+    openai_endpoint = f"{llm_endpoint}/v1"
+    params = {
+        "temperature": 0.1,
+        "max_tokens": 1024,
+        "streaming": False,
     }
-
-    llm = HuggingFaceEndpoint(
-        endpoint_url=llm_endpoint,
-        task="text-generation",
-        **generation_params,
-    )
-
-    my_model = ChatHuggingFace(llm=llm, model_id=model_id)
-    return my_model
-
+    llm = ChatOpenAI(openai_api_key="EMPTY", openai_api_base=openai_endpoint, model_name=model_id, **params)
+    return llm
