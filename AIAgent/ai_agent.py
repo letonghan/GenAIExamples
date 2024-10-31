@@ -14,7 +14,7 @@ from comps import (
     register_statistics,
 )
 from utils.utils import extract_task_list, get_args
-from prompts import start_goal_prompt, start_goal_prompt_zh, summarize_prompt, summarize_prompt_zh
+from prompts import start_goal_prompt, summarize_prompt
 from agent_planner import AgentPlanner
 from fastapi.responses import StreamingResponse
 
