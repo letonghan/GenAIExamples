@@ -45,6 +45,11 @@ class AgentNode:
     def __call__(self, state):
         # prepare input parameters
         messages = state["messages"]
+        
+        if messages[-1].name == "image_generation":
+            ai_message = AIMessage(content="Image generated")
+            return {"messages": [ai_message]}
+        
         query = messages[0].content
         history = assemble_history(messages)
         
@@ -136,6 +141,8 @@ class AgentPlanner:
                                     result = {"tool": tool_name}
                                 else:
                                     print(v[0].content)
+                                    if v[0].content == "Image generated":
+                                        continue
                                     result = {"content": [v[0].content.replace("\n", " ")]}
                                 yield f"data: {json.dumps(result)}\n\n"
                             elif node_name == "tools":
@@ -170,17 +177,3 @@ class AgentPlanner:
         except Exception as e:
             return str(e)
 
-
-async def main():
-    args, _ = get_args()
-    planner = AgentPlanner(args)
-    # input_query = "Most recent album by Taylor Swift"
-    input_query = "简单列出这篇文章的贡献，https://qianwen-res.oss-cn-beijing.aliyuncs.com/QWEN_TECHNICAL_REPORT.pdf"
-    config = {"recursion_limit": args.recursion_limit}
-
-    response = await planner.non_streaming_run(input_query, config)
-    print("============ finish ===========")
-    print(response)
-
-if __name__ == "__main__":
-    asyncio.run(main())

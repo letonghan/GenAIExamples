@@ -40,20 +40,6 @@ services:
       LOGFLAG: ${LOGFLAG}
     restart: unless-stopped
 
-  tei-reranking-service:
-    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
-    container_name: agent-tei-reranking-server
-    ports:
-      - "3004:80"
-    volumes:
-      - "./data:/data"
-    shm_size: 1g
-    environment:
-      no_proxy: ${no_proxy}
-      http_proxy: ${http_proxy}
-      https_proxy: ${https_proxy}
-    command: --model-id ${RERANK_MODEL_ID} --auto-truncate
-
 networks:
   default:
     driver: bridge

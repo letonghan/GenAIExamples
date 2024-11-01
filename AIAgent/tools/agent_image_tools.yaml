@@ -1,0 +1,11 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+image_generation:
+  description: "根据给定的prompt内容,生成一张符合描述的512×512尺寸的图片。"
+  callable_api: tools.py:image_generation
+  args_schema:
+    prompt:
+      type: str
+      description: prompt
+  return_output: generated_image_base64

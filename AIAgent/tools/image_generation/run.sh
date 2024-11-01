@@ -6,11 +6,8 @@ export ip_address=$(hostname -I | awk '{print $1}')
 export no_proxy=${ip_address}
 
 export HUGGINGFACEHUB_API_TOKEN=${HUGGINGFACEHUB_API_TOKEN}
-export EMBEDDING_MODEL_ID="BAAI/bge-large-zh-v1.5"
-export TEI_EMBEDDING_ENDPOINT="http://${ip_address}:3001"
-export GOOGLE_API_KEY=${GOOGLE_API_KEY}
-export GOOGLE_CSE_ID=${GOOGLE_CSE_ID}
-export LOGFLAG="true"
+export IMAGE_MODEL="stable-diffusion-v1-5/stable-diffusion-v1-5"
+export HABANA_VISIBLE_DEVICES="5"
 
 
 docker compose -f compose.yaml up -d

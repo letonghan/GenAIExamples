@@ -11,16 +11,20 @@ export model="Qwen/Qwen2.5-72B-Instruct"
 export LOGFLAG="true"
 export TEI_EMBEDDING_ENDPOINT="http://${ip_address}:3001"
 export WEB_RETRIEVER_ENDPOINT="http://${ip_address}:3003"
-export TEI_RERANKING_ENDPOINT="http://${ip_address}:3004"
+export IMAGE_GEN_ENDPOINT="http://${ip_address}:3005"
 export PYTHONPATH="/home/kding1/letong/GenAIComps/"
+export tool_yaml_path="/home/kding1/letong/agent_lkk/AIAgent/tools/agent_tools.yaml"
 
 
 function start_tgi_ragagent() {
-    export HF_CACHE_DIR="./data"
-    export NUM_SHARDS=2
+    export HF_CACHE_DIR="/home/kding1/letong/data"
+    export HABANA_VISIBLE_DEVICES="0,1,2,3"
+    export NUM_SHARDS=4
 
     docker compose -f compose.yaml up -d
 }
+
+start_tgi_ragagent
 
 python ai_agent.py
 

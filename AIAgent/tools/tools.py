@@ -4,8 +4,6 @@
 import os
 import json
 import requests
-from requests.exceptions import RequestException
-from typing import Any, Dict, List, Literal, Optional, Union
 
 
 def send_post_request(url, payload):
@@ -146,4 +144,29 @@ def rag_retriever(query: str, files: str) -> str:
     print(f"Execution time: {elapsed_time}")
     # exit()
     return final_result
+
+
+def image_generation(prompt: str) -> str:
+    image_gen_endpoint = os.environ.get("IMAGE_GEN_ENDPOINT")
+    image_payload = {
+        "prompt": prompt,
+        "num_images_per_prompt":1
+    }
+    max_retries = 5
+    
+    for i in range(max_retries):
+        try:
+            response = send_post_request(image_gen_endpoint+"/v1/text2image", image_payload)
+            if response.status_code == 200:
+                break
+            else:
+                print(f"fail to call /v1/text2image, try again.")
+        except Exception as e:
+            print(f"Fail to call /v1/text2image. Error: {e}. Tried {i+1} times.")
+            
+    if response:
+        image_list = response.json()['images']
+        return image_list[0]
+    else:
+        return ""
 
