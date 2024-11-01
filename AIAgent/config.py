@@ -17,6 +17,9 @@ if os.environ.get("strategy") is not None:
 if os.environ.get("llm_endpoint_url") is not None:
     env_config += ["--llm_endpoint_url", os.environ["llm_endpoint_url"]]
 
+if os.environ.get("tool_yaml_path") is not None:
+    env_config += ["--tool_yaml_path", os.environ["tool_yaml_path"]]
+
 if os.environ.get("llm_engine") is not None:
     env_config += ["--llm_engine", os.environ["llm_engine"]]
 

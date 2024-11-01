@@ -1,0 +1,14 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+rag_retriever:
+  description: "从给定文件列表中检索出和问题相关的内容，支持文件类型包括：pdf/docx/pptx/txt/html/csv/tsv/xlsx/xls"
+  callable_api: tools.py:rag_retriever
+  args_schema:
+    query:
+      type: str
+      description: "在这里列出关键词，用逗号分隔，目的是方便在文档中匹配到相关的内容，由于文档可能多语言，关键词最好中英文都有。"
+    files:
+      type: list
+      description: "待解析的文件路径列表，支持本地文件路径或可下载的http(s)链接。"
+  return_output: rag_retrieval_result
