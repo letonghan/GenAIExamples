@@ -1,0 +1,85 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+services:
+  redis-vector-db:
+    image: redis/redis-stack:7.2.0-v9
+    container_name: redis-vector-db
+    ports:
+      - "6379:6379"
+      - "8001:8001"
+  dataprep-redis-service:
+    image: ${REGISTRY:-opea}/dataprep-redis:${TAG:-latest}
+    container_name: dataprep-redis-server
+    depends_on:
+      - redis-vector-db
+      - tei-embedding-service
+    ports:
+      - "6007:6007"
+    environment:
+      no_proxy: ${no_proxy}
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      REDIS_URL: redis://redis-vector-db:6379
+      REDIS_HOST: redis-vector-db
+      INDEX_NAME: ${INDEX_NAME}
+      TEI_ENDPOINT: http://tei-embedding-service:80
+      HUGGINGFACEHUB_API_TOKEN: ${HUGGINGFACEHUB_API_TOKEN}
+      LOGFLAG: true
+
+  tei-embedding-service:
+    image: ghcr.io/huggingface/tei-gaudi:latest
+    container_name: agent-tei-embedding-server
+    ports:
+      - "3001:80"
+    volumes:
+      - "./data:/data"
+    runtime: habana
+    cap_add:
+      - SYS_NICE
+    ipc: host
+    environment:
+      no_proxy: ${no_proxy}
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      HABANA_VISIBLE_DEVICES: "2"
+      OMPI_MCA_btl_vader_single_copy_mechanism: none
+      MAX_WARMUP_SEQUENCE_LENGTH: 512
+      INIT_HCCL_ON_ACQUIRE: 0
+      ENABLE_EXPERIMENTAL_FLAGS: true
+    command: --model-id ${EMBEDDING_MODEL_ID} --auto-truncate
+
+  retriever:
+    image: ${REGISTRY:-opea}/retriever-redis:${TAG:-latest}
+    container_name: retriever-redis-server
+    depends_on:
+      - redis-vector-db
+    ports:
+      - "7000:7000"
+    ipc: host
+    environment:
+      no_proxy: ${no_proxy}
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      REDIS_URL: ${REDIS_URL}
+      INDEX_NAME: ${INDEX_NAME}
+      TEI_EMBEDDING_ENDPOINT: http://tei-embedding-service:80
+    restart: unless-stopped
+
+  tei-reranking-service:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
+    container_name: agent-tei-reranking-server
+    ports:
+      - "3004:80"
+    volumes:
+      - "./data:/data"
+    shm_size: 1g
+    environment:
+      no_proxy: ${no_proxy}
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+    command: --model-id ${RERANK_MODEL_ID} --auto-truncate
+
+networks:
+  default:
+    driver: bridge
