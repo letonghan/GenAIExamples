@@ -63,13 +63,9 @@ Multiple tools can be called in a single step, but always separate each tool cal
 
 IMPORTANT: You MUST ALWAYS make tool calls unless you can provide an answer. Make each tool call in JSON format in a new line.
 
-If you can generate an answer, provide the answer in the following format in a new line:
-{{"answer": "your answer here"}}
-
-Follow these guidelines when formulating your answer:
-1. If the question contains a false premise or assumption, answer “invalid question”.
-2. If you are uncertain or do not know the answer, answer “I don't know”.
-3. Give concise, factual and relevant answers.
+If you can generate an answer, provide it in a thorough, step-by-step manner. Explain the answer with as much detail and depth as possible, covering all relevant points and perspectives. Always provide the answer in {language} language.
+Reflect on the problem and consider if there are additional steps or explanations that can further elaborate the answer. If possible, include examples, comparisons, or expanded explanations to ensure comprehensive coverage.
+Structure your answer with sub-points or sections if applicable, addressing each aspect of the request in detail.
 
 User request: {input}
 Now begin!
