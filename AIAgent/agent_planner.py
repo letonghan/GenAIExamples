@@ -136,14 +136,14 @@ class AgentPlanner:
                                     result = {"tool": tool_name}
                                 else:
                                     print(v[0].content)
-                                    result = {"content": v[0].content.replace("\n", " ")}
+                                    result = {"content": [v[0].content.replace("\n", " ")]}
                                 yield f"data: {json.dumps(result)}\n\n"
                             elif node_name == "tools":
                                 full_content = v[0].content
                                 tool_name = v[0].name
                                 result = {
                                     "tool": tool_name,
-                                    "content": full_content
+                                    "content": [full_content]
                                 }
                                 if "web" in tool_name:
                                     source = extract_web_source(full_content)
