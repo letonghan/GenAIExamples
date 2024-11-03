@@ -51,7 +51,7 @@ def web_search_retriever(query: str) -> str:
     else:
         return ""
     
-
+init_search = False
 def rag_retriever(query: str, files: str) -> str:
     """Search from files/local database for a specific query."""
     print(query)
@@ -65,12 +65,43 @@ def rag_retriever(query: str, files: str) -> str:
     retrieval_endpoint = os.environ.get("RETRIEVAL_ENDPOINT")
     tei_reranking_endpoint = os.environ.get("TEI_RERANKING_ENDPOINT")
 
-    """
-
     #############################
     # prepare data  #
     #############################
     if files:
+        global init_search
+        print(init_search)
+        # if not init_search:
+        if True:
+            # need pip install qwen, pip install -e ./"[rag]"
+            from qwen_agent.settings import DEFAULT_MAX_REF_TOKEN, DEFAULT_PARSER_PAGE_SIZE, DEFAULT_RAG_SEARCHERS
+            from qwen_agent.tools.base import TOOL_REGISTRY, BaseTool, register_tool
+            from qwen_agent.tools.doc_parser import DocParser, Record
+            from qwen_agent.tools.simple_doc_parser import PARSER_SUPPORTED_FILE_TYPES
+
+            doc_parse = DocParser({'max_ref_token': DEFAULT_MAX_REF_TOKEN, 'parser_page_size': DEFAULT_PARSER_PAGE_SIZE})
+
+            rag_searchers = DEFAULT_RAG_SEARCHERS
+
+            if len(rag_searchers) == 1:
+                rag_search = TOOL_REGISTRY[rag_searchers[0]]({'max_ref_token': DEFAULT_MAX_REF_TOKEN})
+            else:
+                from qwen_agent.tools.search_tools.hybrid_search import HybridSearch
+                rag_search = HybridSearch({'max_ref_token': DEFAULT_MAX_REF_TOKEN, 'rag_searchers': rag_searchers})
+
+            init_search = True
+
+        records = []
+        for file in files:
+            _record = doc_parse.call(params={'url': file})
+            records.append(_record)
+
+        if records:
+            return rag_search.call(params={'query': query}, docs=[Record(**rec) for rec in records])
+        else:
+            return []
+
+        """
         # headers = {'Content-Type': 'multipart/form-data'}
         headers = {}
         files_payload = {
@@ -86,7 +117,8 @@ def rag_retriever(query: str, files: str) -> str:
             print(response)
         except RequestException as e:
             raise Exception(f"An unexpected error occurred: {str(e)}")
-    """
+        """
+
 
     #############################
     # prepare embedding vector  #
