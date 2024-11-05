@@ -56,7 +56,7 @@ async def agent_start(input: LLMParamsDoc):
     text_generation = await llm.text_generation(
         prompt=prompt,
         stream=False,
-        max_new_tokens=128,
+        max_new_tokens=input.max_tokens,
         repetition_penalty=input.repetition_penalty,
         temperature=input.temperature,
         top_k=input.top_k,

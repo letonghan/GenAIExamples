@@ -241,7 +241,7 @@ def convert_json_to_tool_call(json_str):
 
 def extract_web_source(text: str):
     import re
-    pattern = r"source: (https://[^\s]+)\s"
+    pattern = r"title:\s*(.+?)\s*\n.*?source:\s*(https?://[^\s]+)"
     matches = re.findall(pattern, text)
     return list(set(matches))
 

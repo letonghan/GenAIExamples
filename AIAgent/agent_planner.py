@@ -143,7 +143,7 @@ class AgentPlanner:
                                     print(v[0].content)
                                     if v[0].content == "Image generated":
                                         continue
-                                    result = {"content": [v[0].content.replace("\n", " ")]}
+                                    result = {"content": [v[0].content.replace("\n\n", "\n")]}
                                 yield f"data: {json.dumps(result)}\n\n"
                             elif node_name == "tools":
                                 full_content = v[0].content
@@ -153,9 +153,11 @@ class AgentPlanner:
                                     "content": [full_content]
                                 }
                                 if "web" in tool_name:
-                                    source = extract_web_source(full_content)
-                                    result["source"] = source
+                                    source_list = extract_web_source(full_content)
+                                    result["source"] = source_list
                                 yield f"data: {json.dumps(result)}\n\n"
+                                if not full_content:
+                                    continue
                                 
             yield "data: [DONE]\n\n"
         except Exception as e:

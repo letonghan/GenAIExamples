@@ -33,7 +33,7 @@ summarize_prompt = PromptTemplate(
 
     "{text}"
 
-    Write using clear markdown formatting in a style expected of the goal "{goal}".
+    Write using clear format in a style expected of the goal "{goal}".
     Be as clear, informative, and descriptive as necessary.
     You will not make up information or add any information outside of the above text.
     Only use the given information and nothing more.
