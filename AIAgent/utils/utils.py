@@ -245,3 +245,10 @@ def extract_web_source(text: str):
     matches = re.findall(pattern, text)
     return list(set(matches))
 
+
+def cal_tokens(query: str):
+    from transformers import AutoTokenizer
+    tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-32B-Instruct")
+    tokens = tokenizer.encode(query)
+    num_tokens = len(tokens)
+    return num_tokens

@@ -8,17 +8,19 @@ from prompts import REACT_AGENT_LLAMA_PROMPT
 from utils.agent_utils import (
     setup_chat_model,
     AgentState,
-    AgentOutputParser,
+    AgentOutputParser
 )
 from utils.utils import (
     get_tools_descriptions,
     tool_renderer,
     assemble_history,
     convert_json_to_tool_call,
-    get_args,
-    extract_web_source
+    extract_web_source,
+    cal_tokens
 )
 
+
+TOOL_LIST = ["web_search_retriever", "image_generation", "rag_retriever"]
 
 class AgentNode:
     
@@ -52,6 +54,12 @@ class AgentNode:
         
         query = messages[0].content
         history = assemble_history(messages)
+
+        llm_input = self.prompt.format(input=query, history=history, tools=self.tools_descriptions, language=self.language)
+        num_tokens = cal_tokens(llm_input)
+        if num_tokens > 8191:
+            print(f"llm input tokens is larger than 8191.")
+            return {"messages": [AIMessage(content="LLM input tokens exceed the limit of 8191.")]}
         
         # invoke llm chain
         output = self.chain.invoke({
@@ -65,6 +73,9 @@ class AgentNode:
         tool_calls = []
         for res in output:
             if "tool" in res:
+                if res["tool"] not in TOOL_LIST:
+                    print(f"wrong tool name")
+                    return {"messages": [AIMessage(content="No search result.")]}
                 add_kw_tc, tool_call = convert_json_to_tool_call(res)
                 tool_calls.append(tool_call)
 
@@ -135,6 +146,8 @@ class AgentPlanner:
                 for node_name, node_state in event.items():
                     for k, v in node_state.items():
                         if v is not None:
+                            print(f"======= {node_name} =======")
+                            print(f"------- {k}, {v} -------\n\n")
                             if node_name == "agent":
                                 if v[0].content == "":
                                     tool_name = v[0].additional_kwargs['tool_calls'][0].function.name
