@@ -13,7 +13,7 @@ from comps import (
     register_microservice,
     register_statistics,
 )
-from utils.utils import extract_task_list, get_args
+from utils.utils import extract_task_list, get_args, cal_tokens
 from prompts import start_goal_prompt, summarize_prompt
 from agent_planner import AgentPlanner
 from fastapi.responses import StreamingResponse
@@ -113,6 +113,12 @@ async def agent_start(input: AgentSumDoc):
 
     text = " ".join(results)
     prompt = summarize_prompt.format(goal=goal, language=language, text=text)
+
+    # calculate input tokens
+    num_tokens = cal_tokens(prompt)
+    if num_tokens > 8191:
+        logger.info(f"llm input tokens are longer than 8191.")
+        return "LLM input tokens are longer than 8191."
 
     if logflag:
         logger.info(f"[ Summarize ] final input prompt: {prompt}")
