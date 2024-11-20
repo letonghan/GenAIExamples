@@ -138,9 +138,14 @@ async def agent_start(input: AgentSumDoc):
             chat_response = ""
             async for text in text_generation:
                 chat_response += text
-                chunk_repr = text
+                lines = text.split("\n")
+                chunk_repr = "\\n".join(lines)
+                chunk_repr = chunk_repr.replace(" ", "&nbsp;")
                 if logflag:
                     logger.info(f"[ Summarize ] chunk:{chunk_repr}")
+                # stop generate for stopper sign
+                if chunk_repr == "<|im_end|>":
+                    break
                 yield f"data: {chunk_repr}\n\n"
             if logflag:
                 logger.info(f"[ Summarize ] stream response: {chat_response}")
