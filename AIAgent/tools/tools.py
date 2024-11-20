@@ -8,8 +8,15 @@ import requests
 
 def send_post_request(url, payload):
     proxies = {"http": ""}
-    response = requests.post(url, json=payload, proxies=proxies)
-    return response
+    try:
+        response = requests.post(url, json=payload, proxies=proxies)
+        return response
+    except requests.exceptions.Timeout as e:
+        print(f"request {url} timeout: {e}")
+        raise e
+    except requests.exceptions.RequestException as e:
+        print(f"exception occurred for {url}:", e)
+        raise e
 
 
 def web_search_retriever(query: str) -> str:
@@ -30,7 +37,7 @@ def web_search_retriever(query: str) -> str:
     web_retriever_payload = {
         "text": query,
         "embedding": embedding_vector,
-        "k": 8
+        "k": 5
     }
     for i in range(max_retries):
         try:
@@ -100,25 +107,6 @@ def rag_retriever(query: str, files: str) -> str:
             return rag_search.call(params={'query': query}, docs=[Record(**rec) for rec in records])
         else:
             return []
-
-        """
-        # headers = {'Content-Type': 'multipart/form-data'}
-        headers = {}
-        files_payload = {
-            'link_list': (None, json.dumps(files)),
-        }
-        try:
-            response = requests.post(dataprep_endpoint,
-                headers=headers,
-                files=files_payload,
-                data={"chunk_size": 512, "chunk_overlap": 200})
-            # response.raise_for_status()
-            response = response.json()
-            print(response)
-        except RequestException as e:
-            raise Exception(f"An unexpected error occurred: {str(e)}")
-        """
-
 
     #############################
     # prepare embedding vector  #
