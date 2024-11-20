@@ -2,13 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 services:
-  tei-embedding-service:
+  agent-tei-embedding-service:
     image: ghcr.io/huggingface/tei-gaudi:latest
     container_name: agent-tei-embedding-server
     ports:
       - "3001:80"
     volumes:
-      - "/home/kding1/letong/data:/data"
+      - ${HF_CACHE_DIR}:/data
     runtime: habana
     cap_add:
       - SYS_NICE
@@ -17,14 +17,14 @@ services:
       no_proxy: ${no_proxy}
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
-      HABANA_VISIBLE_DEVICES: "2"
+      HABANA_VISIBLE_DEVICES: ${HABANA_VISIBLE_DEVICES}
       OMPI_MCA_btl_vader_single_copy_mechanism: none
       MAX_WARMUP_SEQUENCE_LENGTH: 512
       INIT_HCCL_ON_ACQUIRE: 0
       ENABLE_EXPERIMENTAL_FLAGS: true
     command: --model-id ${EMBEDDING_MODEL_ID} --auto-truncate
 
-  web-retriever:
+  agent-web-retriever:
     image: ${REGISTRY:-opea}/web-retriever-chroma:${TAG:-latest}
     container_name: agent-web-retriever-chroma-server
     ports:

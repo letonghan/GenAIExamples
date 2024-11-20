@@ -7,6 +7,8 @@ services:
     container_name: agent-text2image-server
     ports:
       - "3005:9379"
+    volumes:
+      - ${HF_CACHE_DIR}:/data
     ipc: host
     runtime: habana
     cap_add:
