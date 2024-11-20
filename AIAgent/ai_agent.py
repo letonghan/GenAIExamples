@@ -14,7 +14,7 @@ from comps import (
     register_statistics,
 )
 from utils.utils import extract_task_list, get_args, cal_tokens
-from prompts import start_goal_prompt, summarize_prompt
+from prompts import start_goal_prompt, summarize_prompt, summarize_prompt_new
 from agent_planner import AgentPlanner
 from fastapi.responses import StreamingResponse
 
@@ -71,7 +71,7 @@ async def agent_start(input: LLMParamsDoc):
     if logflag:
         logger.info(f"[ Start ] task list: {task_list}")
 
-    return task_list
+    return task_list[:5]
 
 
 @register_microservice(
@@ -112,7 +112,7 @@ async def agent_start(input: AgentSumDoc):
     results = input.results
 
     text = " ".join(results)
-    prompt = summarize_prompt.format(goal=goal, language=language, text=text)
+    prompt = summarize_prompt_new.format(goal=goal, language=language, text=text)
 
     # calculate input tokens
     num_tokens = cal_tokens(prompt)
