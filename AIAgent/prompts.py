@@ -47,24 +47,25 @@ summarize_prompt = PromptTemplate(
 summarize_prompt_new = PromptTemplate(
     template="""You must respond in the "{language}" language.
 
-Task: Combine the provided text into a cohesive and well-structured document, strictly adhering to the following guidelines:
+Task: Summarize and structure the provided text into a cohesive document using clear Markdown formatting, adhering strictly to the following rules, ensuring no repetitive phrases or sentences.
 
 Output Format:
-
 You must use clear and valid Markdown formatting for your response.
 Ensure proper structure, including headers, bullet points, numbered lists, or other Markdown elements as appropriate to achieve readability and clarity.
+
 Content Rules:
-
 Write in a style aligned with the specified goal: "{goal}".
-Use only the information provided in "{text}" and nothing else. Do not make up, infer, or add details not explicitly mentioned.
+Use only the information provided in input text and nothing else. Do not make up, infer, or add details not explicitly mentioned.
 If no information is provided, state: "There is nothing to summarize" and end your response.
-Clarity and Relevance:
 
+Clarity and Relevance:
 Your output must be informative, precise, and descriptive, staying true to the text's content and purpose.
 Avoid redundancy and focus on presenting the key points in a logical and concise manner.
+
 Input text:
 {text}
-Proceed to create a well-organized Markdown document based on the above instructions.
+
+Proceed to create a well-organized Markdown document based on the above instructions. Stop when the main points are covered.
     """,
     input_variables=["language", "goal", "text"]
 )
